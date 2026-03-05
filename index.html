@@ -3,77 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الراسم البياني - ثانوية الذرى</title>
+    <title>الراسم البياني Pro - ثانوية الذرى</title>
     <script src="https://unpkg.com/d3@3/d3.min.js"></script>
     <script src="https://unpkg.com/function-plot@1/dist/function-plot.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <style>
-        :root { --primary: #6c5ce7; }
+        :root {
+            --primary: #6c5ce7;
+            --bg-color: #0f0c29;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --input-bg: rgba(255, 255, 255, 0.15);
+            --ticker-bg: rgba(108, 92, 231, 0.2);
+        }
+
+        .light-mode {
+            --bg-color: #f0f2f5;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-color: #1a1a1a;
+            --input-bg: rgba(0, 0, 0, 0.05);
+            --ticker-bg: rgba(108, 92, 231, 0.1);
+        }
+
         body {
-            margin: 0; padding: 0; background: #0f0c29; color: white;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0; padding: 0; background: var(--bg-color); color: var(--text-color);
+            font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; overflow-y: auto; /* السماح بالتمرير */
+            min-height: 100vh; overflow-y: auto; transition: background 0.3s ease;
         }
         
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 
-        .container { width: 95%; max-width: 500px; padding: 20px 10px; z-index: 1; flex-grow: 1; }
-        .header { text-align: center; margin-bottom: 20px; }
+        /* شريط الترحيب المتحرك */
+        .welcome-ticker {
+            width: 100%;
+            background: var(--ticker-bg);
+            color: var(--primary);
+            padding: 10px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            position: fixed;
+            top: 0;
+            z-index: 10;
+            border-bottom: 1px solid rgba(108, 92, 231, 0.3);
+            font-weight: bold;
+            box-sizing: border-box;
+        }
+
+        .ticker-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: ticker 25s linear infinite;
+        }
+
+        @keyframes ticker {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .container { width: 95%; max-width: 500px; padding: 60px 10px 20px 10px; z-index: 1; flex-grow: 1; }
         
+        .header { text-align: center; margin-bottom: 20px; position: relative; }
+        
+        .theme-toggle {
+            position: absolute; top: 0; left: 0; background: var(--primary);
+            border: none; color: white; padding: 8px 12px; border-radius: 20px;
+            cursor: pointer; font-size: 0.8rem; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
         .card {
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
-            padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: var(--card-bg); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 24px;
+            padding: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3);
         }
 
-        /* تحسين مظهر صندوق الرسم */
         #plot { 
-            width: 100%; height: 320px; background: #ffffff; 
-            border-radius: 12px; margin: 15px 0; border: 2px solid #000;
+            width: 100%; height: 350px; background: #ffffff; 
+            border-radius: 16px; margin: 15px 0; border: 2px solid var(--primary);
+            overflow: hidden;
         }
-
-        /* تلوين محاور الرسم والتدريجات بالأسود عبر CSS */
-        .function-plot .axis line, .function-plot .axis path { stroke: #000 !important; stroke-width: 1.5px; }
-        .function-plot .grid line { stroke: #ddd !important; }
-        .function-plot .origin { stroke: #000 !important; stroke-width: 2px; }
 
         input {
             width: 100%; padding: 15px; border-radius: 12px; border: none;
-            background: rgba(255,255,255,0.2); color: #fff; font-size: 1.3rem;
+            background: var(--input-bg); color: var(--text-color); font-size: 1.3rem;
             text-align: left; direction: ltr; margin-bottom: 15px; outline: none;
             box-sizing: border-box; border-bottom: 3px solid var(--primary);
         }
 
-        .keyboard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .keyboard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         .keyboard button {
-            padding: 15px 5px; border-radius: 10px; border: none;
-            background: rgba(255,255,255,0.12); color: white; font-size: 1rem;
-            cursor: pointer; transition: 0.2s; font-weight: bold;
+            padding: 14px 2px; border-radius: 12px; border: none;
+            background: rgba(108, 92, 231, 0.15); color: var(--text-color); 
+            font-size: 0.95rem; cursor: pointer; transition: 0.2s; font-weight: 600;
         }
-        .keyboard button:active { background: var(--primary); transform: scale(0.92); }
-        .btn-draw { background: #2ecc71 !important; grid-column: span 2; color: #000 !important; }
-        .btn-clear { background: #e74c3c !important; }
+        .keyboard button:hover { background: var(--primary); color: white; }
+        .btn-draw { background: #2ecc71 !important; grid-column: span 2; color: #fff !important; }
+        .btn-clear { background: #e74c3c !important; color: white !important; }
 
         .footer {
-            width: 100%; padding: 30px 10px; text-align: center;
-            background: rgba(0,0,0,0.7); border-top: 1px solid rgba(255,255,255,0.1);
-            margin-top: 30px; z-index: 1; box-sizing: border-box;
+            width: 100%; padding: 40px 20px; text-align: center;
+            background: rgba(0,0,0,0.1); border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 40px; z-index: 1; box-sizing: border-box;
         }
-        .names-box { margin: 15px 0; padding: 10px; border-radius: 10px; background: rgba(108, 92, 231, 0.1); border: 1px solid var(--primary); }
-        b { color: #a29bfe; }
+        .names-box { margin: 15px 0; padding: 15px; border-radius: 15px; background: rgba(108, 92, 231, 0.1); border: 1px dashed var(--primary); }
     </style>
 </head>
 <body>
+
+    <div class="welcome-ticker">
+        <div class="ticker-content">
+            🌹 أهلاً وسهلاً بكم في معرض يوم الرياضيات العالمي في ثانوية الذرى للمتميزين 🌹 | نتشرف بزيارتكم الكريمة | استمتعوا باستكشاف جمال الرياضيات الرقمية | تمت البرمجة بواسطة الطالبين محمدعلي براء ومحمدرضا ضياء
+        </div>
+    </div>
 
     <canvas id="bg-canvas"></canvas>
 
     <div class="container">
         <div class="header">
-            <h1 style="margin:0; font-size: 1.8rem;">الراسم البياني 📈</h1>
-            <p style="margin:5px 0; opacity: 0.8;">ثانوية الذرى للمتميزين</p>
+            <button class="theme-toggle" onclick="toggleTheme()">تغيير النمط 🌓</button>
+            <h1 style="margin:0; font-size: 1.9rem; margin-top: 40px;">الراسم البياني Pro 📈</h1>
+            <p style="margin:5px 0; opacity: 0.8; font-weight: bold;">ثانوية الذرى للمتميزين</p>
         </div>
 
         <div class="card">
@@ -87,7 +138,7 @@
                 <button onclick="press('1')">1</button><button onclick="press('2')">2</button><button onclick="press('3')">3</button><button onclick="press('-')">-</button><button onclick="press('^')">^</button>
                 <button onclick="press('0')">0</button><button onclick="press('.')">.</button><button onclick="press('x')">x</button><button onclick="press('+')">+</button><button onclick="backspace()">⌫</button>
                 <button class="btn-clear" onclick="clearAll()">C</button>
-                <button class="btn-draw" onclick="updatePlot()">رسم الدالة</button>
+                <button class="btn-draw" onclick="updatePlot()">تحديث الرسم</button>
                 <button onclick="press('sqrt(')">√</button><button onclick="press('PI')">π</button>
             </div>
         </div>
@@ -96,17 +147,23 @@
     <div class="footer">
         <p>جميع الحقوق محفوظة © لـ <b>ثانوية الذرى للمتميزين</b></p>
         <div class="names-box">
-            <p>تمت البرمجة بواسطة الطلاب:</p>
-            <p style="font-size: 1.1rem;"><b>محمدعلي براء الربيعي</b> & <b>محمدرضا ضياء حمادي</b></p>
+            <p>تمت البرمجة بواسطة الطلاب المبدعين:</p>
+            <p style="font-size: 1.1rem; letter-spacing: 0.5px;"><b>محمدعلي براء الربيعي</b> & <b>محمدرضا ضياء حمادي</b></p>
         </div>
-        <p>بإشراف الأساتذة:<br>أ. محمد سمير | أ. محمد زكي | د. علي خالد</p>
+        <p style="opacity: 0.9;">بإشراف الأساتذة القديرين:<br>أ. محمد سمير | أ. محمد زكي | د. علي خالد</p>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // رسم الدالة مع تحسين الوضوح (لون أسود)
+        let isDarkMode = true;
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('light-mode');
+            updatePlot(); 
+        }
+
         function updatePlot() {
             const eq = document.getElementById('equation').value;
             const plotDiv = document.getElementById('plot');
@@ -114,24 +171,22 @@
                 functionPlot({
                     target: '#plot',
                     width: plotDiv.clientWidth,
-                    height: 320,
+                    height: 350,
                     grid: true,
-                    xAxis: { domain: [-10, 10] },
-                    yAxis: { domain: [-10, 10] },
+                    tip: { xLine: true, yLine: true }, 
+                    xAxis: { label: 'x', domain: [-6, 6] },
+                    yAxis: { label: 'y', domain: [-6, 6] },
                     data: [{
                         fn: eq,
-                        color: '#000000', // لون الدالة أسود غامق
+                        color: '#6c5ce7',
                         graphType: 'polyline',
                         sampler: 'builtIn'
                     }]
                 });
                 tg.HapticFeedback.impactOccurred('medium');
-            } catch (err) {
-                alert("تأكد من كتابة الدالة بشكل صحيح.");
-            }
+            } catch (err) { console.log(err); }
         }
 
-        // لوحة المفاتيح
         function press(val) { document.getElementById('equation').value += val; }
         function clearAll() { document.getElementById('equation').value = ''; }
         function backspace() {
@@ -139,24 +194,35 @@
             document.getElementById('equation').value = ev.substring(0, ev.length - 1);
         }
 
-        // الخلفية 3D
+        let scene, camera, renderer, plane;
         function init3D() {
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('bg-canvas'), alpha: true});
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({canvas: document.getElementById('bg-canvas'), alpha: true, antialias: true});
             renderer.setSize(window.innerWidth, window.innerHeight);
-            const geo = new THREE.PlaneGeometry(100, 100, 20, 20);
-            const mat = new THREE.MeshBasicMaterial({color: 0x6c5ce7, wireframe: true, transparent: true, opacity: 0.1});
-            const plane = new THREE.Mesh(geo, mat);
-            plane.rotation.x = -Math.PI/2;
+            
+            const geo = new THREE.PlaneGeometry(120, 120, 25, 25);
+            const mat = new THREE.MeshBasicMaterial({color: 0x6c5ce7, wireframe: true, transparent: true, opacity: 0.15});
+            plane = new THREE.Mesh(geo, mat);
+            plane.rotation.x = -Math.PI/2.5;
             scene.add(plane);
-            camera.position.z = 30;
-            function animate() { requestAnimationFrame(animate); plane.rotation.z += 0.001; renderer.render(scene, camera); }
+            camera.position.z = 40;
+
+            function animate() { 
+                requestAnimationFrame(animate); 
+                plane.rotation.z += 0.0015; 
+                renderer.render(scene, camera); 
+            }
             animate();
         }
 
         window.onload = () => { init3D(); updatePlot(); };
-        window.onresize = updatePlot;
+        window.onresize = () => { 
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            updatePlot(); 
+        };
     </script>
 </body>
 </html>
