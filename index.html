@@ -3,63 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Math Visualizer Pro - 3D Edition</title>
+    <title>الراسم البياني - ثانوية الذرى</title>
     <script src="https://unpkg.com/d3@3/d3.min.js"></script>
     <script src="https://unpkg.com/function-plot@1/dist/function-plot.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <style>
-        :root { --primary: #6c5ce7; --glass: rgba(255, 255, 255, 0.08); }
+        :root { --primary: #6c5ce7; }
         body {
-            margin: 0; padding: 0;
-            background: #0f0c29; /* لون أساسي غامق خلف المجسمات */
-            color: white; font-family: 'Segoe UI', sans-serif;
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-            overflow: hidden; /* لمنع ظهور أشرطة التمرير على الخلفية */
+            margin: 0; padding: 0; background: #0f0c29; color: white;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-y: auto; /* السماح بالتمرير */
         }
         
-        /* حاوية الخلفية ثلاثية الأبعاد */
-        #bg-canvas {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; /* لجعلها خلف المحتوى المحتوى */
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+        .container { width: 95%; max-width: 500px; padding: 20px 10px; z-index: 1; flex-grow: 1; }
+        .header { text-align: center; margin-bottom: 20px; }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2); border-radius: 20px;
+            padding: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .container { width: 95%; max-width: 500px; padding: 15px; box-sizing: border-box; z-index: 1; /* فوق الخلفية */ }
-        .header { text-align: center; margin-bottom: 15px; }
-        .card {
-            background: var(--glass); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 20px;
-            padding: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-        }
+        /* تحسين مظهر صندوق الرسم */
         #plot { 
-            width: 100%; height: 280px; background: rgba(255,255,255,0.9); 
-            border-radius: 12px; margin: 15px 0;
+            width: 100%; height: 320px; background: #ffffff; 
+            border-radius: 12px; margin: 15px 0; border: 2px solid #000;
         }
+
+        /* تلوين محاور الرسم والتدريجات بالأسود عبر CSS */
+        .function-plot .axis line, .function-plot .axis path { stroke: #000 !important; stroke-width: 1.5px; }
+        .function-plot .grid line { stroke: #ddd !important; }
+        .function-plot .origin { stroke: #000 !important; stroke-width: 2px; }
+
         input {
-            width: 100%; padding: 12px; border-radius: 10px; border: none;
-            background: rgba(255,255,255,0.15); color: #fff; font-size: 1.2rem;
-            text-align: left; direction: ltr; margin-bottom: 10px; outline: none;
+            width: 100%; padding: 15px; border-radius: 12px; border: none;
+            background: rgba(255,255,255,0.2); color: #fff; font-size: 1.3rem;
+            text-align: left; direction: ltr; margin-bottom: 15px; outline: none;
+            box-sizing: border-box; border-bottom: 3px solid var(--primary);
         }
-        .keyboard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 10px; }
+
+        .keyboard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         .keyboard button {
-            padding: 12px 5px; border-radius: 8px; border: none;
-            background: rgba(255,255,255,0.08); color: white; font-size: 0.9rem;
-            cursor: pointer; transition: 0.2s;
+            padding: 15px 5px; border-radius: 10px; border: none;
+            background: rgba(255,255,255,0.12); color: white; font-size: 1rem;
+            cursor: pointer; transition: 0.2s; font-weight: bold;
         }
-        .keyboard button:active { background: var(--primary); transform: scale(0.9); }
-        .btn-draw { background: #2ecc71 !important; grid-column: span 2; font-weight: bold; }
+        .keyboard button:active { background: var(--primary); transform: scale(0.92); }
+        .btn-draw { background: #2ecc71 !important; grid-column: span 2; color: #000 !important; }
         .btn-clear { background: #e74c3c !important; }
-        
+
         .footer {
-            margin-top: auto; padding: 20px; text-align: center;
-            font-size: 0.8rem; background: rgba(0,0,0,0.5); width: 100%;
-            border-top: 1px solid rgba(255,255,255,0.1); line-height: 1.6;
-            box-sizing: border-box; z-index: 1;
+            width: 100%; padding: 30px 10px; text-align: center;
+            background: rgba(0,0,0,0.7); border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 30px; z-index: 1; box-sizing: border-box;
         }
-        .footer b { color: #a29bfe; }
-        .names-box { margin-top: 5px; padding: 5px; border-radius: 8px; background: rgba(255,255,255,0.03); }
+        .names-box { margin: 15px 0; padding: 10px; border-radius: 10px; background: rgba(108, 92, 231, 0.1); border: 1px solid var(--primary); }
+        b { color: #a29bfe; }
     </style>
 </head>
 <body>
@@ -67,12 +71,12 @@
     <canvas id="bg-canvas"></canvas>
 
     <div class="container">
-        <div class="header animate__animated animate__fadeInDown">
-            <h3 style="margin:0;">محلل الدوال الذكي 📈 <span style="font-size:0.7em;">(3D)</span></h3>
-            <small>ثانوية الذرى للمتميزين</small>
+        <div class="header">
+            <h1 style="margin:0; font-size: 1.8rem;">الراسم البياني 📈</h1>
+            <p style="margin:5px 0; opacity: 0.8;">ثانوية الذرى للمتميزين</p>
         </div>
 
-        <div class="card animate__animated animate__zoomIn">
+        <div class="card">
             <input type="text" id="equation" value="x^2" readonly>
             <div id="plot"></div>
             
@@ -82,83 +86,52 @@
                 <button onclick="press('4')">4</button><button onclick="press('5')">5</button><button onclick="press('6')">6</button><button onclick="press('*')">×</button><button onclick="press(')')">)</button>
                 <button onclick="press('1')">1</button><button onclick="press('2')">2</button><button onclick="press('3')">3</button><button onclick="press('-')">-</button><button onclick="press('^')">^</button>
                 <button onclick="press('0')">0</button><button onclick="press('.')">.</button><button onclick="press('x')">x</button><button onclick="press('+')">+</button><button onclick="backspace()">⌫</button>
-                <button class="btn-clear" onclick="clearAll()">C</button><button class="btn-draw" onclick="draw()">رسم الدالة</button><button onclick="press('sqrt(')">√</button><button onclick="press('PI')">π</button>
+                <button class="btn-clear" onclick="clearAll()">C</button>
+                <button class="btn-draw" onclick="updatePlot()">رسم الدالة</button>
+                <button onclick="press('sqrt(')">√</button><button onclick="press('PI')">π</button>
             </div>
         </div>
     </div>
 
-    <div class="footer animate__animated animate__fadeInUp">
-        <p style="margin: 0;">جميع الحقوق محفوظة © لـ <b>ثانوية الذرى للمتميزين</b></p>
+    <div class="footer">
+        <p>جميع الحقوق محفوظة © لـ <b>ثانوية الذرى للمتميزين</b></p>
         <div class="names-box">
-            <p style="margin: 5px 0;">تمت البرمجة بواسطة الطلاب:</p>
-            <p style="margin: 2px 0;"><b>محمدعلي براء الربيعي</b> & <b>محمدرضا ضياء حمادي</b></p>
+            <p>تمت البرمجة بواسطة الطلاب:</p>
+            <p style="font-size: 1.1rem;"><b>محمدعلي براء الربيعي</b> & <b>محمدرضا ضياء حمادي</b></p>
         </div>
-        <p style="margin: 10px 0 0 0;">بإشراف الأساتذة:<br>أ. محمد سمير | أ. محمد زكي | د. علي خالد</p>
+        <p>بإشراف الأساتذة:<br>أ. محمد سمير | أ. محمد زكي | د. علي خالد</p>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // 1. إعداد الخلفية ثلاثية الأبعاد (Three.js)
-        function init3DBackground() {
-            const canvas = document.getElementById('bg-canvas');
-            const renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-
-            const scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x0f0c29, 20, 100); // إضافة ضباب لزيادة العمق
-
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 30;
-
-            // إنشاء مجسم: شبكة أرضية (Wireframe Plan) لتبدو كفضاء معلوماتي
-            const geometry = new THREE.PlaneGeometry(100, 100, 20, 20);
-            const material = new THREE.MeshBasicMaterial({
-                color: 0x6c5ce7, // نفس لون التطبيق الأساسي
-                wireframe: true,
-                transparent: true,
-                opacity: 0.15 // شفافة جداً لتبدو فخمة وغير مزعجة
-            });
-            const plane = new THREE.Mesh(geometry, material);
-            plane.rotation.x = -Math.PI / 2; // جعلها أفقية
-            plane.position.y = -10; // إنزالها للأسفل قليلاً
-            scene.add(plane);
-
-            // إضافة بعض النقاط المضيئة كنجوم
-            const starsGeometry = new THREE.BufferGeometry();
-            const starsMaterial = new THREE.PointsMaterial({color: 0xffffff, size: 0.1});
-            const starsCoords = [];
-            for (let i = 0; i < 500; i++) {
-                starsCoords.push((Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100, (Math.random() - 0.5) * 100);
+        // رسم الدالة مع تحسين الوضوح (لون أسود)
+        function updatePlot() {
+            const eq = document.getElementById('equation').value;
+            const plotDiv = document.getElementById('plot');
+            try {
+                functionPlot({
+                    target: '#plot',
+                    width: plotDiv.clientWidth,
+                    height: 320,
+                    grid: true,
+                    xAxis: { domain: [-10, 10] },
+                    yAxis: { domain: [-10, 10] },
+                    data: [{
+                        fn: eq,
+                        color: '#000000', // لون الدالة أسود غامق
+                        graphType: 'polyline',
+                        sampler: 'builtIn'
+                    }]
+                });
+                tg.HapticFeedback.impactOccurred('medium');
+            } catch (err) {
+                alert("تأكد من كتابة الدالة بشكل صحيح.");
             }
-            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsCoords, 3));
-            const stars = new THREE.Points(starsGeometry, starsMaterial);
-            scene.add(stars);
-
-            // دالة التحريك (Animation)
-            function animate() {
-                requestAnimationFrame(animate);
-                
-                // تحريك الشبكة ببطء شديد
-                plane.rotation.z += 0.001; 
-                stars.rotation.y += 0.0005;
-
-                renderer.render(scene, camera);
-            }
-
-            // التعامل مع تغيير حجم الشاشة
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-
-            animate();
         }
 
-        // 2. وظائف الآلة الحاسبة والرسم (D3.js)
+        // لوحة المفاتيح
         function press(val) { document.getElementById('equation').value += val; }
         function clearAll() { document.getElementById('equation').value = ''; }
         function backspace() {
@@ -166,28 +139,24 @@
             document.getElementById('equation').value = ev.substring(0, ev.length - 1);
         }
 
-        function draw() {
-            const eq = document.getElementById('equation').value;
-            try {
-                functionPlot({
-                    target: '#plot',
-                    width: document.getElementById('plot').clientWidth,
-                    height: 280,
-                    grid: true,
-                    xAxis: { domain: [-10, 10] },
-                    yAxis: { domain: [-10, 10] },
-                    data: [{ fn: eq, color: '#6c5ce7', sampler: 'builtIn' }]
-                });
-                tg.HapticFeedback.impactOccurred('medium');
-            } catch (err) { alert("تأكد من كتابة الدالة بشكل صحيح."); }
+        // الخلفية 3D
+        function init3D() {
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({canvas: document.getElementById('bg-canvas'), alpha: true});
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            const geo = new THREE.PlaneGeometry(100, 100, 20, 20);
+            const mat = new THREE.MeshBasicMaterial({color: 0x6c5ce7, wireframe: true, transparent: true, opacity: 0.1});
+            const plane = new THREE.Mesh(geo, mat);
+            plane.rotation.x = -Math.PI/2;
+            scene.add(plane);
+            camera.position.z = 30;
+            function animate() { requestAnimationFrame(animate); plane.rotation.z += 0.001; renderer.render(scene, camera); }
+            animate();
         }
 
-        // التشغيل عند الفتح
-        window.onload = () => {
-            init3DBackground(); // تشغيل الخلفية الفخمة أولاً
-            draw();             // رسم الدالة الافتراضية
-        };
-        window.onresize = draw;
+        window.onload = () => { init3D(); updatePlot(); };
+        window.onresize = updatePlot;
     </script>
 </body>
 </html>
