@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الراسم البياني Pro - ثانوية الذرى</title>
+    <title>تطبيق الرسم البياني Pro - ثانوية الذرى</title>
     <script src="https://unpkg.com/d3@3/d3.min.js"></script>
     <script src="https://unpkg.com/function-plot@1/dist/function-plot.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -36,25 +36,15 @@
         
         #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
 
-        /* شريط الترحيب المتحرك */
         .welcome-ticker {
-            width: 100%;
-            background: var(--ticker-bg);
-            color: var(--primary);
-            padding: 10px 0;
-            overflow: hidden;
-            white-space: nowrap;
-            position: fixed;
-            top: 0;
-            z-index: 10;
-            border-bottom: 1px solid rgba(108, 92, 231, 0.3);
-            font-weight: bold;
-            box-sizing: border-box;
+            width: 100%; background: var(--ticker-bg); color: var(--primary);
+            padding: 10px 0; overflow: hidden; white-space: nowrap;
+            position: fixed; top: 0; z-index: 10; border-bottom: 1px solid rgba(108, 92, 231, 0.3);
+            font-weight: bold; box-sizing: border-box;
         }
 
         .ticker-content {
-            display: inline-block;
-            padding-left: 100%;
+            display: inline-block; padding-left: 100%;
             animation: ticker 25s linear infinite;
         }
 
@@ -114,7 +104,7 @@
 
     <div class="welcome-ticker">
         <div class="ticker-content">
-            🌹 أهلاً وسهلاً بكم في معرض يوم الرياضيات العالمي في ثانوية الذرى للمتميزين 🌹 | نتشرف بزيارتكم الكريمة | استمتعوا باستكشاف جمال الرياضيات الرقمية | تمت البرمجة بواسطة الطالبين محمدعلي براء ومحمدرضا ضياء
+            🌹 أهلاً وسهلاً بكم في معرض يوم الرياضيات العالمي | نتشرف بزيارتكم لتجربة "تطبيق الرسم البياني" في ثانوية الذرى للمتميزين 🌹 | تمت البرمجة بواسطة الطالبين محمدعلي براء ومحمدرضا ضياء
         </div>
     </div>
 
@@ -123,7 +113,7 @@
     <div class="container">
         <div class="header">
             <button class="theme-toggle" onclick="toggleTheme()">تغيير النمط 🌓</button>
-            <h1 style="margin:0; font-size: 1.9rem; margin-top: 40px;">الراسم البياني Pro 📈</h1>
+            <h1 style="margin:0; font-size: 1.9rem; margin-top: 40px;">تطبيق الرسم البياني Pro 📈</h1>
             <p style="margin:5px 0; opacity: 0.8; font-weight: bold;">ثانوية الذرى للمتميزين</p>
         </div>
 
