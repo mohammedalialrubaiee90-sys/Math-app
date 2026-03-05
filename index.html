@@ -2,58 +2,107 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Math Mini App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Visualizer - Al-Thura School</title>
+    <script src="https://unpkg.com/d3@3/d3.min.js"></script>
+    <script src="https://unpkg.com/function-plot@1/dist/function-plot.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <style>
         :root {
-            --bg: var(--tg-theme-bg-color, #ffffff);
-            --text: var(--tg-theme-text-color, #000000);
-            --hint: var(--tg-theme-hint-color, #999999);
-            --btn: var(--tg-theme-button-color, #2481cc);
-            --btn-text: var(--tg-theme-button-text-color, #ffffff);
+            --primary: #6c5ce7;
+            --glass: rgba(255, 255, 255, 0.1);
         }
-        body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 400px; }
-        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--hint); font-size: 1.2rem; margin-bottom: 10px; box-sizing: border-box; background: var(--bg); color: var(--text); }
-        .result-box { background: rgba(0,0,0,0.05); padding: 20px; border-radius: 12px; min-height: 50px; font-size: 1.5rem; font-weight: bold; text-align: center; margin-bottom: 20px; border: 2px dashed var(--btn); }
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; }
-        button { padding: 15px; border-radius: 8px; border: none; background: var(--btn); color: var(--btn-text); font-size: 1rem; cursor: pointer; }
-        button.op { background: #f39c12; }
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .header { margin-top: 30px; text-align: center; padding: 10px; }
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 25px;
+            width: 85%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px 0 rgba(0,0,0,0.37);
+            margin: 20px 0;
+        }
+        input {
+            width: 100%; padding: 12px; border-radius: 10px; border: none;
+            background: rgba(255,255,255,0.15); color: white;
+            font-size: 1.1rem; outline: none; box-sizing: border-box;
+            text-align: center; margin-top: 10px;
+        }
+        button {
+            width: 100%; padding: 14px; margin-top: 15px; border-radius: 10px;
+            border: none; background: var(--primary); color: white;
+            font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1rem;
+        }
+        button:active { transform: scale(0.95); }
+        #plot {
+            width: 100%; height: 300px; background: white;
+            border-radius: 15px; margin-top: 20px;
+        }
+        .footer {
+            margin-top: auto; width: 100%; padding: 20px 0;
+            background: rgba(0,0,0,0.3); text-align: center;
+            font-size: 0.8rem; color: rgba(255,255,255,0.7);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .footer b { color: #a29bfe; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h3>مساعد الرياضيات الذكي 🧮</h3>
-        <div id="display" class="result-box">0</div>
-        <input type="text" id="input" placeholder="اكتب المسألة هنا..." readonly>
-        
-        <div class="grid">
-            <button onclick="add('7')">7</button><button onclick="add('8')">8</button><button onclick="add('9')">9</button><button class="op" onclick="add('/')">/</button>
-            <button onclick="add('4')">4</button><button onclick="add('5')">5</button><button onclick="add('6')">6</button><button class="op" onclick="add('*')">×</button>
-            <button onclick="add('1')">1</button><button onclick="add('2')">2</button><button onclick="add('3')">3</button><button class="op" onclick="add('-')">-</button>
-            <button onclick="clearAll()" style="background:#e74c3c">C</button><button onclick="add('0')">0</button><button onclick="calculate()" style="background:#2ecc71">=</button><button class="op" onclick="add('+')">+</button>
-        </div>
+
+    <div class="header animate__animated animate__fadeInDown">
+        <h2 style="margin-bottom: 5px;">محلل الدوال الرياضي 📈</h2>
+        <small>ثانوية الذرى للمتميزين</small>
+    </div>
+
+    <div class="card animate__animated animate__zoomIn">
+        <label>أدخل الدالة الرياضية:</label>
+        <input type="text" id="equation" placeholder="مثال: x^2 or sin(x)" value="x^2">
+        <button onclick="draw()">تحديث الرسم البياني</button>
+        <div id="plot"></div>
+    </div>
+
+    <div class="footer animate__animated animate__fadeInUp">
+        <p>جميع الحقوق محفوظة © لـ <b>ثانوية الذرى للمتميزين</b></p>
+        <p>برمجة الطالب: <b>محمد علي براء</b></p>
+        <p>بإشراف: أ. محمد سمير | أ. محمد زكي | د. علي خالد</p>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        const inputField = document.getElementById('input');
-        const display = document.getElementById('display');
+        tg.ready();
 
-        function add(val) { inputField.value += val; }
-        function clearAll() { inputField.value = ''; display.innerText = '0'; }
-        function calculate() {
+        function draw() {
+            const eq = document.getElementById('equation').value;
             try {
-                const res = eval(inputField.value);
-                display.innerText = res;
-                tg.HapticFeedback.notificationOccurred('success');
-            } catch (e) {
-                display.innerText = "خطأ!";
-                tg.HapticFeedback.notificationOccurred('error');
+                functionPlot({
+                    target: '#plot',
+                    width: document.getElementById('plot').clientWidth,
+                    height: 300,
+                    grid: true,
+                    data: [{ fn: eq, color: '#6c5ce7' }]
+                });
+                tg.HapticFeedback.impactOccurred('light');
+            } catch (err) {
+                alert("يرجى كتابة الدالة بشكل صحيح باستخدام x");
             }
         }
+        window.onload = draw;
+        window.onresize = draw;
     </script>
 </body>
 </html>
